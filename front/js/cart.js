@@ -81,19 +81,18 @@ function displayCartItems() {
   
   displayCartItems();
   
+  // Cette fonction est appelée lorsqu'un utilisateur met à jour la quantité d'un article dans le panier
 
-
-  function updateCartItemQuantity(event) {
+  function updateCartItemQuantity(event, productId, productColor) { 
     
+  // Récupération de l'élément input correspondant à la quantité de l'article
     const input = event.target;
+  // Récupération de l'élément parent de l'input correspondant à l'article
     const article = input.closest(".cart__item");
-    const productId = article.dataset.id;
-    const productColor = article.dataset.color;
+  // Récupération de la quantité saisie dans l'input
     const productQuantity = parseInt(input.value);
-
-
-  
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    { // Mise à jour du panier avec la nouvelle quantité de l'article
     let updatedCart = cart.map((product) => {
       if (product._id === productId && product.color === productColor) {
         product.quantity = productQuantity;
@@ -102,8 +101,29 @@ function displayCartItems() {
     });
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   
-    displayCartItems();
+  // Recalcul de la quantité totale et du prix total du panier
+    let totalArticle = 0;
+    let totalPrice = 0;
+
+   // Pour chaque article dans le panier mis à jour, 
+   //récupération de son prix et calcul de la quantité totale et du prix total du panier
+    updatedCart.forEach((product) => {
+      const key = `${product._id}_${product.color}`;
+      totalArticle += product.quantity;
+      fetch(`http://localhost:3000/api/products/${product._id}`)
+        .then((response) => response.json())
+        .then((productDetails) => {
+          totalPrice += product.quantity * productDetails.price;
+          document.getElementById("totalQuantity").textContent = totalArticle;
+          document.getElementById("totalPrice").textContent = totalPrice;
+        })
+        .catch((error) => {
+          console.error(`Error fetching product with id ${product._id}`, error);
+        });
+    });
   }
+}
+  
 
 
 
