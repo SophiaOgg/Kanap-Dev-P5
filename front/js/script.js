@@ -1,3 +1,12 @@
+function getProductHtml(product){
+  return ` <a href="./product.html?id=${product._id}">
+  <article>
+  <img src="${product.imageUrl}" alt="${product.altTxt}" />
+    <h3 class="productName">${product.name}</h3>
+    <p class="productDescription">${product.description}</p>
+  </article>
+</a>`
+}
 // URL de l'API pour récupérer les produits
 const ApiUrl = 'http://localhost:3000/api/products/';
 
@@ -9,23 +18,20 @@ const container = () => {
   // Appelle l'API pour récupérer les produits
   fetch(ApiUrl)
     .then(response => response.json())
-    .then(data =>{
-      // Boucle sur les produits pour les afficher dans la page
-      for (i = 0; i < data.length; i++) {
-        items.innerHTML += `
-        <a href="./product.html?id=${data[i]._id}">
-            <article>
-            <img src="${data[i].imageUrl}" alt="${data[i].altTxt}" />
-              <h3 class="productName">${data[i].name}</h3>
-              <p class="productDescription">${data[i].description}</p>
-            </article>
-          </a>
-        `;
+    .then(products =>{
+      let html = "";
+      for (const product of products) {
+
+      html+= getProductHtml(product)
+         
       }
+      items.innerHTML = html; 
+
     })
     // Si une erreur survient, affiche un message d'erreur dans la page
     .catch((err) =>
       document.querySelector('#items').innerText = `Le produit est introuvable !`);
+
 }
 
 // Appelle la fonction "container" pour afficher les produits dans la page

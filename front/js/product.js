@@ -1,36 +1,52 @@
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
+
 // Récupération des données du produit depuis l'API
 fetch(`http://localhost:3000/api/products/${id}`)
   .then(response => response.json())
   .then(productData => {
-    console.log(productData)
 
     // Affichage des images, noms, description, prix, couleur
 
     // Récupération de l'élément HTML où afficher l'image
     let img = document.querySelector('.item__img');
-    // Injection du code HTML pour afficher l'image
-    img.innerHTML = `<img src="${productData.imageUrl}" alt="${productData.altTxt}" />`;
-
+    // Création de l'élément image et ajout des attributs alt et src
+    let imgElem = document.createElement('img');
+    imgElem.src = productData.imageUrl;
+    imgElem.alt = productData.altTxt;
+    img.appendChild(imgElem);
 
     let name = document.querySelector('#title');
-    name.innerHTML = `<h1 id="title">${productData.name}</h1>`;
+    // Création de l'élément h1 pour le nom du produit et ajout du texte
+    let nameElem = document.createElement('h1');
+    let nameText = document.createTextNode(productData.name);
+    nameElem.appendChild(nameText);
+    name.appendChild(nameElem);
 
     let description = document.querySelector('#description');
-    description.innerHTML = `<p id="description">${productData.description}</p>`;
+    // Création de l'élément p pour la description et ajout du texte
+    let descriptionElem = document.createElement('p');
+    let descriptionText = document.createTextNode(productData.description);
+    descriptionElem.appendChild(descriptionText);
+    description.appendChild(descriptionElem);
 
-    let price = document.querySelector('#price');
-    price.innerHTML = `${productData.price}`;
+    // Récupération de l'élément HTML où afficher le prix
+   let price = document.querySelector('#price');
+   // Ajout du prix avec le symbole "€"
+   price.innerText = `${productData.price} `;
 
 
     let colors = document.querySelector('#colors');
     // Boucle pour ajouter chaque option de couleur dans le code HTML
     for (i = 0; i < productData.colors.length; i++) {
-      colors.innerHTML += `<option value='${productData.colors[i]}'>${productData.colors[i]}</option>`;
+      let colorOption = document.createElement('option');
+      colorOption.value = productData.colors[i];
+      colorOption.textContent = productData.colors[i];
+      colors.appendChild(colorOption);
     }
   })
+
 
   // Gestion des erreurs en cas de produit introuvable
   .catch((err) => document.querySelector('.item').innerText = `Le produit est introuvable !`);

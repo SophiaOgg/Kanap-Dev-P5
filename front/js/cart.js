@@ -1,113 +1,97 @@
 // Page panier
 
+// Cette fonction affiche les articles présents dans le panier sur la page web
 function displayCartItems() {
-    const basket = document.querySelector("#cart__items");
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    let cartItems = {};
-    let totalArticle = 0;
-    let totalPrice = 0;
-  
-    cart.forEach((product) => {
-      const key = `${product._id}_${product.color}`;
-      if (cartItems[key]) {
-        cartItems[key].quantity += product.quantity;
-      } else {
-        cartItems[key] = {
-          id: product._id,
-          color: product.color,
-          quantity: product.quantity,
-        };
-      }
-    });
-  
-    const products = Object.values(cartItems);
+  const basket = document.querySelector("#cart__items");
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+// On initialise des variables qui seront utilisées pour calculer le total de la commande
+  let cartItems = {};
+  let totalArticle = 0;
+  let totalPrice = 0;
 
-    basket.innerHTML = "";
-
+// On construit un objet qui résume les articles présents dans le panier
+  cart.forEach((product) => {
+    const key = `${product._id}_${product.color}`;
+    if (cartItems[key]) {
+      cartItems[key].quantity += product.quantity;
+    } else {
+      cartItems[key] = {
+        id: product._id,
+        color: product.color,
+        quantity: product.quantity,
+      };
+    }
+  });
+// On construit une chaîne de caractères HTML qui représente les articles du panier
+  let cartHtml = "";
+// On récupère les valeurs de l'objet cartItems sous forme d'un tableau
+  const products = Object.values(cartItems);
+  if (products && products.length > 0) {
+    for (const product of products) {
+      fetch(`http://localhost:3000/api/products/${product.id}`)
+        .then((response) => response.json())
+        .then((productDetails) => {
+          const articleHtml = `
+            <article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+              <div class="cart__item__img">
+                <img src="${productDetails.imageUrl}" alt="${productDetails.altTxt}">
+              </div>
+              <div class="cart__item__content">
+                <div class="cart__item__content__description">
+                  <h2>${productDetails.name}</h2>
+                  <p>${product.color}</p>
+                  <p>${productDetails.price} €</p>
+                </div>
+                <div class="cart__item__content__settings">
+                  <div class="cart__item__content__settings__quantity">
+                    <p>Qté : </p>
+                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}" onchange="updateCartItemQuantity(event, '${product.id}', '${product.color}')">
+                  </div>
+                  <div class="cart__item__content__settings__delete">
+                    <p class="deleteItem" onclick="removeFromCart('${product.id}', '${product.color}')">Supprimer</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          `;
+          // On ajoute la chaîne de caractères HTML de l'article courant à la chaîne de caractères 
+          cartHtml += articleHtml;
+          // On met à jour les variables qui calculent le total de la commande
+          totalArticle += product.quantity;
+          totalPrice += product.quantity * productDetails.price;
+          // On met à jour l'affichage du total de la commande sur la page web
+          document.getElementById("totalQuantity").textContent = totalArticle;
+          document.getElementById("totalPrice").textContent = totalPrice;
+          // On affiche les articles dans le panier sur la page web
+          basket.innerHTML = cartHtml;
+        })
+        .catch((error) => {
+          console.error(`Error fetching product with id ${product.id}`, error);
+        });
+    }
+  } else {
+    basket.innerHTML = "<p>Votre panier est vide.</p>";
     totalArticle = 0;
     totalPrice = 0;
-  
-    if (products && products.length > 0) {        
-      products.forEach((product) => {
-        fetch(`http://localhost:3000/api/products/${product.id}`)
-          .then((response) => response.json())
-          .then((productDetails) => {
-            basket.innerHTML += `
-              <article class="cart__item" data-id="${product.id}" data-color="${product.color}">
-                <div class="cart__item__img">
-                  <img src="${productDetails.imageUrl}" alt="${productDetails.altTxt}">
-                </div>
-                <div class="cart__item__content">
-                  <div class="cart__item__content__description">
-                    <h2>${productDetails.name}</h2>
-                    <p>${product.color}</p>
-                    <p>${productDetails.price} €</p>
-                  </div>
-                  <div class="cart__item__content__settings">
-                    <div class="cart__item__content__settings__quantity">
-                      <p>Qté : </p>
-                      <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}"onchange="updateCartItemQuantity(event, '${product.id}', '${product.color}')">
-                    </div>
-                    <div class="cart__item__content__settings__delete">
-                      <p class="deleteItem"  onclick= "removeFromCart('${product.id}', '${product.color}')" >Supprimer</p>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            `;
-            totalArticle += product.quantity;
-            totalPrice += product.quantity * productDetails.price ;
-            document.getElementById("totalQuantity").textContent = totalArticle;
-            document.getElementById("totalPrice").textContent = totalPrice;
-           
-           
-          })
-          .catch((error) => {
-            console.error(`Error fetching product with id ${product.id}`, error);
-          });
-      });
-    } else {
-         
-      basket.innerHTML = "<p>Votre panier est vide.</p>";
-      totalArticle = 0;
-      totalPrice = 0;
-      document.getElementById("totalQuantity").textContent = totalArticle;
-      document.getElementById("totalPrice").textContent = totalPrice;
-    }
+    document.getElementById("totalQuantity").textContent = totalArticle;
+    document.getElementById("totalPrice").textContent = totalPrice;
   }
+}
+
   
   displayCartItems();
   
 
 
-//   // function updateCartItemQuantity(event) {
-    
-//   //   const input = event.target;
-//   //   const article = input.closest(".cart__item");
-//   //   const productId = article.dataset.id;
-//   //   const productColor = article.dataset.color;
-//   //   const productQuantity = parseInt(input.value);
-
-
-  
-//   //   let cart = JSON.parse(localStorage.getItem("cart")) || [];
-//   //   let updatedCart = cart.map((product) => {
-//   //     if (product._id === productId && product.color === productColor) {
-//   //       product.quantity = productQuantity;
-//   //     }
-//   //     return product;
-//   //   });
-//   //   localStorage.setItem("cart", JSON.stringify(updatedCart));
-  
-//   //   displayCartItems();
-//   // }
-
   function updateCartItemQuantity(event) {
+    
     const input = event.target;
     const article = input.closest(".cart__item");
     const productId = article.dataset.id;
     const productColor = article.dataset.color;
     const productQuantity = parseInt(input.value);
+
+
   
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let updatedCart = cart.map((product) => {
@@ -118,26 +102,9 @@ function displayCartItems() {
     });
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   
-    // Recalculate total quantity and price
-    let totalArticle = 0;
-    let totalPrice = 0;
-  
-    updatedCart.forEach((product) => {
-      const key = `${product._id}_${product.color}`;
-      totalArticle += product.quantity;
-      fetch(`http://localhost:3000/api/products/${product._id}`)
-        .then((response) => response.json())
-        .then((productDetails) => {
-          totalPrice += product.quantity * productDetails.price;
-          document.getElementById("totalQuantity").textContent = totalArticle;
-          document.getElementById("totalPrice").textContent = totalPrice;
-        })
-        .catch((error) => {
-          console.error(`Error fetching product with id ${product.id}`, error);
-        });
-    });
+    displayCartItems();
   }
-  
+
 
 
   function addToCart(productId, color, quantity) {
@@ -173,9 +140,6 @@ function displayCartItems() {
     displayCartItems();
   
   }
-
-
-
 
 
 // Formulaire
@@ -319,8 +283,7 @@ async function numeroCommande(contact, products) {
 
     const res = await post.json();
     const orderId = res.orderId;
-    localStorage.setItem("orderId", orderId);
     window.location.href = `confirmation.html?orderId=${orderId}`;
     // Supprimer le panier du localStorage après avoir passé une commande
-    localStorage.removeItem("cart");
+    localStorage.clear();
 }
