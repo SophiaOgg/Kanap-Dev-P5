@@ -1,38 +1,27 @@
 // Page panier
 
 // Cette fonction affiche les articles présents dans le panier sur la page web
-function displayCartItems() {
+async function displayCartItems() {
   const basket = document.querySelector("#cart__items");
   let cart = JSON.parse(localStorage.getItem("cart")) || [];
 // On initialise des variables qui seront utilisées pour calculer le total de la commande
-  let cartItems = {};
+
   let totalArticle = 0;
   let totalPrice = 0;
 
-// On construit un objet qui résume les articles présents dans le panier
-  cart.forEach((product) => {
-    const key = `${product._id}_${product.color}`;
-    if (cartItems[key]) {
-      cartItems[key].quantity += product.quantity;
-    } else {
-      cartItems[key] = {
-        id: product._id,
-        color: product.color,
-        quantity: product.quantity,
-      };
-    }
-  });
 // On construit une chaîne de caractères HTML qui représente les articles du panier
   let cartHtml = "";
 // On récupère les valeurs de l'objet cartItems sous forme d'un tableau
-  const products = Object.values(cartItems);
+  // const products = Object.values(cartItems);
+  const products = cart;
   if (products && products.length > 0) {
     for (const product of products) {
-      fetch(`http://localhost:3000/api/products/${product.id}`)
+      console.log(product)
+      await fetch(`http://localhost:3000/api/products/${product._id}`)
         .then((response) => response.json())
         .then((productDetails) => {
           const articleHtml = `
-            <article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+            <article class="cart__item" data-id="${product._id}" data-color="${product.color}">
               <div class="cart__item__img">
                 <img src="${productDetails.imageUrl}" alt="${productDetails.altTxt}">
               </div>
@@ -45,10 +34,10 @@ function displayCartItems() {
                 <div class="cart__item__content__settings">
                   <div class="cart__item__content__settings__quantity">
                     <p>Qté : </p>
-                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}" onchange="updateCartItemQuantity(event, '${product.id}', '${product.color}')">
+                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}" onchange="updateCartItemQuantity(event, '${product._id}', '${product.color}')">
                   </div>
                   <div class="cart__item__content__settings__delete">
-                    <p class="deleteItem" onclick="removeFromCart('${product.id}', '${product.color}')">Supprimer</p>
+                    <p class="deleteItem" onclick="removeFromCart('${product._id}', '${product.color}')">Supprimer</p>
                   </div>
                 </div>
               </div>
@@ -56,19 +45,21 @@ function displayCartItems() {
           `;
           // On ajoute la chaîne de caractères HTML de l'article courant à la chaîne de caractères 
           cartHtml += articleHtml;
+       
           // On met à jour les variables qui calculent le total de la commande
           totalArticle += product.quantity;
           totalPrice += product.quantity * productDetails.price;
           // On met à jour l'affichage du total de la commande sur la page web
           document.getElementById("totalQuantity").textContent = totalArticle;
-          document.getElementById("totalPrice").textContent = totalPrice;
-          // On affiche les articles dans le panier sur la page web
-          basket.innerHTML = cartHtml;
+          document.getElementById("totalPrice").textContent = totalPrice;        
         })
         .catch((error) => {
-          console.error(`Error fetching product with id ${product.id}`, error);
+          console.error(`Error fetching product with id ${product._id}`, error);
         });
     }
+      // On affiche les articles dans le panier sur la page web
+      basket.innerHTML = cartHtml;
+     
   } else {
     basket.innerHTML = "<p>Votre panier est vide.</p>";
     totalArticle = 0;
