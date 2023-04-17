@@ -153,6 +153,7 @@ async function displayCartItems() {
   }
 
 
+
 // Formulaire
 
   // Variables associées aux différents inputs du formulaire
@@ -258,25 +259,27 @@ function testForm() {
 
 //---------------  COMMANDE ---------------
 // Pointage sur le bouton Commander et écoute de l'évènement formulaire au clic
+
 document.querySelector("#order").addEventListener("click", formulaire);
 
-
 function formulaire(event) {
-    event.preventDefault();
-    if (testForm()) {
+  event.preventDefault();
+  if (testForm()) {
+    let cart = JSON.parse(localStorage.getItem("cart"));
+    if (cart && cart.length > 0) {
       let contact = {
         firstName: prenom.value,
         lastName : nom.value,
         address : adresse.value,
         city : ville.value,
         email : mail.value
-        };
-            
-        let cart = JSON.parse(localStorage.getItem("cart"));
-        let products = cart.map(item => item._id);
-
-        numeroCommande(contact, products);
+      };
+      let products = cart.map(item => item._id);
+      numeroCommande(contact, products);
+    } else {
+      alert("Votre panier est vide !");
     }
+  }
 }
 
 
